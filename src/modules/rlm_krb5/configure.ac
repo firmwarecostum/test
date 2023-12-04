@@ -1,4 +1,4 @@
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 AC_INIT
 AC_CONFIG_SRCDIR([rlm_krb5.c])
 AC_REVISION($Revision$)
@@ -13,8 +13,8 @@ dnl extra argument: --with-rlm-krb5-dir
 rlm_krb5_dir=
 AC_ARG_WITH(rlm-krb5-dir,
 	[AS_HELP_STRING([--with-rlm-krb5-dir=DIR],
-		[Directory for krb5 files])],
-	[ case "$withval" in
+		[directory where krb5 files are installed])],
+	[case "$withval" in
 	no)
 		AC_MSG_ERROR(Need rlm-krb5-dir)
 		;;
@@ -26,7 +26,6 @@ AC_ARG_WITH(rlm-krb5-dir,
 	esac])
 
 AC_PATH_PROG(krb5_config, krb5-config, not-found, [${rlm_krb5_dir}/bin:${PATH}:/usr/bin:/usr/local/bin])
-
 dnl #
 dnl # If we can find krb5-config we can get the version of the library and determine
 dnl # whether it's safe to enable threading.
@@ -46,7 +45,7 @@ if test "$krb5_config" != 'not-found'; then
 
 	dnl # AWK originally from from https://github.com/hpc/lustre
 	krb5_version=$(echo "$krb5_version_raw" | head -n 1 | \
-		awk '{split($(4),v,"."); if (v@<:@"3"@:>@ = "") v@<:@"3"@:>@ = "0"; print v@<:@"1"@:>@v@<:@"2"@:>@v@<:@"3"@:>@ }')
+		awk '{split($(4),v,"."); if (v@<:@"3"@:>@ == "") v@<:@"3"@:>@ = "0"; print v@<:@"1"@:>@v@<:@"2"@:>@v@<:@"3"@:>@ }')
 	AC_MSG_RESULT([${krb5_version_raw} ($krb5_version)])
 
 	AC_MSG_CHECKING([krb5-config reported vendor])
@@ -59,11 +58,9 @@ if test "$krb5_config" != 'not-found'; then
 		echo "$krb5_version_raw" | grep -i 'MIT' > /dev/null 2>&1 ; then
 		AC_MSG_RESULT([MIT])
 		krb5_api_type='mit'
-		FR_MODULE_FEATURE([using MIT kerberos])
 	else
 		AC_MSG_RESULT([HEIMDAL])
 		krb5_api_type='heimdal'
-		FR_MODULE_FEATURE([using Heimdal kerberos])
 	fi
 else
 	smart_try_dir="$rlm_krb5_dir/include"
@@ -101,14 +98,12 @@ else
 	FR_SMART_CHECK_LIB(krb5, krb5_verify_user_opt)
 	if test "x$ac_cv_lib_krb5_krb5_verify_user_opt" = xyes; then
 		krb5_api_type='heimdal'
-		FR_MODULE_FEATURE([using Heimdal kerberos])
 	else
 		krb5_api_type='mit'
-		FR_MODULE_FEATURE([using MIT kerberos])
 
 		FR_SMART_CHECK_LIB(krb5, krb5_get_init_creds_password)
 		if test "x$ac_cv_lib_krb5_krb5_get_init_creds_password" != xyes; then
-		    FR_MODULE_FAIL([krb5])
+			FR_MODULE_FAIL([krb5])
 		fi
 	fi
 
@@ -123,7 +118,11 @@ CFLAGS="${CFLAGS} ${SMART_CPPFLAGS}"
 dnl #
 dnl # Check how to free things returned by krb5_get_error_message
 dnl #
-AC_CHECK_FUNCS([krb5_get_error_message krb5_free_error_string krb5_free_error_message])
+AC_CHECK_FUNCS(\
+	krb5_get_error_message \
+	krb5_free_error_string \
+	krb5_free_error_message \
+)
 if test "x$ac_cv_func_krb5_get_error_message" = xyes; then
 	krb5mod_cflags="${krb5mod_cflags} -DHAVE_KRB5_GET_ERROR_MESSAGE"
 fi
@@ -143,7 +142,8 @@ if test "$krb5threadsafe" != "no"; then
 	FR_SMART_CHECK_LIB(krb5, krb5_is_thread_safe)
 	if test "x$ac_cv_lib_krb5_krb5_is_thread_safe" = xyes; then
 		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <krb5.h>]], [[return krb5_is_thread_safe() ? 0 : 1]])],
-			[krb5threadsafe="-DKRB5_IS_THREAD_SAFE"], [AC_MSG_WARN([[libkrb5 is not threadsafe]])])
+			[krb5threadsafe="-DKRB5_IS_THREAD_SAFE"], [AC_MSG_WARN([[libkrb5 is not threadsafe]])],
+			[AC_MSG_WARN(cross compiling: not checking)])
 	fi
 else
 	krb5threadsafe=""
@@ -166,7 +166,7 @@ else
 	krb5mod_cflags="$krb5mod_cflags -DHEIMDAL_KRB5"
 fi
 
-FR_MODULE_END_TESTS
+FR_MODULE_END_TESTS(strict)
 
 mod_ldflags="$krb5mod_ldflags $krb5libcrypto $SMART_LIBS"
 mod_cflags="$krb5mod_cflags $krb5threadsafe $SMART_CPPFLAGS"
