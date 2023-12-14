@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/perl
 #
 # This is a pre-compiled source code for the cpanm (cpanminus) program.
 # For more details about how to install cpanm, go to the following URL:
