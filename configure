@@ -25508,10 +25508,10 @@ fi
 
 
 # This corresponds to FreeBSD's WARNS level 6
-DEVELOPER_CFLAGS=`$PYTHON $srcdir/wflags.py`
-if test $? -ne 0 ; then
-  as_fn_error $? "wflags.py failure" "$LINENO" 5
-fi
+#DEVELOPER_CFLAGS=`$PYTHON $srcdir/wflags.py`
+#if test $? -ne 0 ; then
+#  as_fn_error $? "wflags.py failure" "$LINENO" 5
+#fi
 
 # zlib-specific flags
 
