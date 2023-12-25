@@ -23,7 +23,18 @@
 #include <time.h>
 #include <inttypes.h>
 #include <netdb.h>
+#ifdef HAVE_NSS_H
 #include <nss.h>
+#else
+enum nss_status {
+    NSS_STATUS_TRYAGAIN = -2,
+    NSS_STATUS_UNAVAIL,
+    NSS_STATUS_NOTFOUND,
+    NSS_STATUS_SUCCESS,
+    NSS_STATUS_RETURN
+};
+#endif
+
 #include <stdio.h>
 #ifdef __FreeBSD__
 #include <netinet/in.h>
