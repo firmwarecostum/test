@@ -147,28 +147,6 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
     }
 }
 
-#ifndef __FreeBSD__
-enum nss_status _nss_mdns_gethostbyname4_r(const char* name,
-                                           struct gaih_addrtuple** pat,
-                                           char* buffer, size_t buflen,
-                                           int* errnop, int* h_errnop,
-                                           int32_t* ttlp) {
-
-    (void)ttlp;
-
-    userdata_t u;
-    buffer_t buf;
-
-    enum nss_status status =
-        _nss_mdns_gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
-    if (status != NSS_STATUS_SUCCESS) {
-        return status;
-    }
-    buffer_init(&buf, buffer, buflen);
-    return convert_userdata_to_addrtuple(&u, name, pat, &buf, errnop, h_errnop);
-}
-#endif
-
 enum nss_status _nss_mdns_gethostbyname3_r(const char* name, int af,
                                            struct hostent* result, char* buffer,
                                            size_t buflen, int* errnop,
