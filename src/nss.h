@@ -32,21 +32,3 @@
 #define _nss_mdns_gethostbyname_r _nss_mdns_minimal_gethostbyname_r
 #define _nss_mdns_gethostbyaddr_r _nss_mdns_minimal_gethostbyaddr_r
 #endif
-
-// Define prototypes for nss function we're going to export (fixes GCC warnings)
-#ifndef __FreeBSD__
-enum nss_status _nss_mdns_gethostbyname4_r(const char*, struct gaih_addrtuple**,
-                                           char*, size_t, int*, int*, int32_t*);
-#endif
-enum nss_status _nss_mdns_gethostbyname3_r(const char*, int, struct hostent*,
-                                           char*, size_t, int*, int*, int32_t*,
-                                           char**);
-enum nss_status _nss_mdns_gethostbyname2_r(const char*, int, struct hostent*,
-                                           char*, size_t, int*, int*);
-enum nss_status _nss_mdns_gethostbyname_r(const char*, struct hostent*, char*,
-                                          size_t, int*, int*);
-enum nss_status _nss_mdns_gethostbyaddr_r(const void*, int, int,
-                                          struct hostent*, char*, size_t, int*,
-                                          int*);
-
-#endif
