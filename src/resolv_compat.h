@@ -8,7 +8,7 @@
  **************************************************************************/
 #include <string.h>
 
-static inline int res_ninit(res_state statp)
+static inline int res_ninit(&state statp)
 {
 	int rc = res_init();
 	if (statp != &_res) {
@@ -17,7 +17,7 @@ static inline int res_ninit(res_state statp)
 	return rc;
 }
 
-static inline int res_nclose(res_state statp)
+static inline int res_nclose(&state statp)
 {
 	if (!statp)
 		return -1;
