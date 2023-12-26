@@ -114,23 +114,6 @@ verify_name_result_t verify_name_allowed(const char* name,
     }
 }
 
-int local_soa(void) {
-    /* FreeBSD requires the state to be zeroed before calling res_ninit() */
-    struct __res_state state = {
-        0,
-    };
-    int result;
-    unsigned char answer[NS_MAXMSG];
-
-    result = res_ninit(&state);
-    if (result == -1)
-        return 0;
-    result =
-        res_nquery(&state, "local", ns_c_in, ns_t_soa, answer, sizeof answer);
-    res_nclose(&state);
-    return result > 0;
-}
-
 int label_count(const char* name) {
     // Start with single label.
     int count = 1;
@@ -210,67 +193,6 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
 
     return NSS_STATUS_SUCCESS;
 }
-
-#ifndef __FreeBSD__
-enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
-                                              const char* name,
-                                              struct gaih_addrtuple** pat,
-                                              buffer_t* buf, int* errnop,
-                                              int* h_errnop) {
-
-    // Copy name to buffer (referenced in every result address tuple).
-    char* buffer_name = buffer_strdup(buf, name);
-    RETURN_IF_FAILED_ALLOC(buffer_name);
-
-    struct gaih_addrtuple* tuple_prev = NULL;
-    for (int i = 0; i < u->count; i++) {
-        const query_address_result_t* result = &u->result[i];
-        struct gaih_addrtuple* tuple;
-        if (tuple_prev == NULL && *pat) {
-            // The caller has provided a valid initial location in *pat,
-            // so use that as the first result. Without this, nscd will
-            // segfault because it assumes that the buffer is only used as
-            // an overflow.
-            // See
-            // https://lists.freedesktop.org/archives/systemd-devel/2013-February/008606.html
-            tuple = *pat;
-            memset(tuple, 0, sizeof(*tuple));
-        } else {
-            // Allocate a new tuple from the buffer.
-            tuple = buffer_alloc(buf, sizeof(struct gaih_addrtuple));
-            RETURN_IF_FAILED_ALLOC(tuple);
-        }
-
-        size_t address_length = result->af == AF_INET ? sizeof(ipv4_address_t)
-                                                      : sizeof(ipv6_address_t);
-
-        // Assign the (always same) name.
-        tuple->name = buffer_name;
-
-        // Assign actual address family of address.
-        tuple->family = result->af;
-
-        // Copy address.
-        memcpy(&(tuple->addr), &(result->address), address_length);
-
-        // Assign interface scope id
-        tuple->scopeid = result->scopeid;
-
-        if (tuple_prev == NULL) {
-            // This is the first tuple.
-            // Return the start of the list in *pat.
-            *pat = tuple;
-        } else {
-            // Link the new tuple into the previous tuple.
-            tuple_prev->next = tuple;
-        }
-
-        tuple_prev = tuple;
-    }
-
-    return NSS_STATUS_SUCCESS;
-}
-#endif
 
 static char* aligned_ptr(char* p) {
     uintptr_t ptr = (uintptr_t)p;
