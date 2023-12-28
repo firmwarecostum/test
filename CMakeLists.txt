@@ -158,7 +158,7 @@ add_subdirectory(tdutils)
 
 add_subdirectory(td/generate)
 
-if (NOT CMAKE_CROSSCOMPILING)
+if (CMAKE_CROSSCOMPILING)
   add_custom_target(prepare_cross_compiling DEPENDS tl_generate_common tdmime_auto tl_generate_json)
   if (TD_ENABLE_DOTNET)
     add_custom_target(remove_cpp_documentation
