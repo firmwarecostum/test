@@ -1181,7 +1181,7 @@ drv_mac80211_teardown() {
 
 	for wdev in $(list_phy_interfaces "$phy"); do
 		ip link set dev "$wdev" down
-		iw dev "$wdev" del
+		#iw dev "$wdev" del
 	done
 }
 
